@@ -1,8 +1,5 @@
 //Debugging Functions
 
-//const REMOTE_URL = "http://54.85.154.248:5555/push";
-//const REMOTE_KEY = "PyE8Vtk2Pz93WxS8";
-
 var _log = null;
 var _error = null;
 var _warning = null;
@@ -10,11 +7,15 @@ var isRunning = false;
 
 module.exports = function(server, restify) {
 
-	global.isRemoteDebugger = function() {
-		return isRunning;
-	},
+	initialize = function() {
+		
+	}
 
-	global.startRemoteDebugger = function() {
+	isRemoteDebugger = function() {
+		return isRunning;
+	}
+
+	startRemoteDebugger = function() {
 		if(CONFIG.SILK_REMOTE_DEBUGGER==null) {
 			return;
 		}
@@ -90,9 +91,9 @@ module.exports = function(server, restify) {
 	    };
 
 	    console.log("Remote Debug Server Connected to : "+ CONFIG.name);
-	},
+	}
 
-	global.stopRemoteDebugger = function() {
+	stopRemoteDebugger = function() {
 		if(CONFIG.SILK_REMOTE_DEBUGGER==null) {
 			return;
 		}
@@ -101,4 +102,6 @@ module.exports = function(server, restify) {
 		console.warning = _warning;
 		isRunning = false;
 	}
+
+	return this;
 }

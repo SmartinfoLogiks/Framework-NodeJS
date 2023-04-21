@@ -8,8 +8,6 @@ if(CONFIG.cache.enable) {
     const redis = new ioredis(CONFIG.cache);
 }
 
-global._CACHE = {};
-
 /*
  * Cache Storage Controls all the Caching Functionality. It helps speed up fetching various cached data directly
  * using indexes. This is important as REDIS Cache forms the core to our speed
@@ -17,11 +15,15 @@ global._CACHE = {};
  * */
 module.exports = function(server, restify) {
 
-    global._CACHE.initCache = function() {
-        console.log("CACHE Initialized");
-    },
+    initialize = function() {
+        if(CONFIG.cache.enable) {
+            console.log("CACHE Initialized");
+        } else {
+            return false;
+        }
+    }
 
-    global._CACHE.listCacheKeys = function(pattern, callback) {
+    listCacheKeys = function(pattern, callback) {
         if(CONFIG.cache.enable) return callback([]);
 
         if(pattern==null) pattern = "*";
@@ -34,15 +36,15 @@ module.exports = function(server, restify) {
 
             callback(keysArr);
           });
-    },
+    }
 
-    global._CACHE.cacheStatus = function() {
+    cacheStatus = function() {
         if(CONFIG.cache.enable) return false;
 
         return redis.status;
-    },
+    }
 
-    global._CACHE.clearCache = function(pattern) {
+    clearCache = function(pattern) {
         if(CONFIG.cache.enable) return false;
         if(pattern==null) pattern = "*";
         //'sample_pattern:*'
@@ -54,23 +56,23 @@ module.exports = function(server, restify) {
             });
             return pipeline.exec();
           });
-    },
+    }
 
-    global._CACHE.deleteData = function(cacheKey) {
+    deleteData = function(cacheKey) {
         if(CONFIG.cache.enable) return false;
-        _CACHE.clearCache(cacheKey);
-    },
+        clearCache(cacheKey);
+    }
 
-    global._CACHE.storeData = function(cacheKey, data) {
+    storeData = function(cacheKey, data) {
         if(CONFIG.cache.enable) return false;
         if (redis.status != "ready") return data;
 
         if (typeof data == "object") data = JSON.stringify(data);
         redis.set(cacheKey, data);
         return data;
-    },
+    }
 
-    global._CACHE.fetchData = function(cacheKey, callback, defaultData = false) {
+    fetchData = function(cacheKey, callback, defaultData = false) {
         if(CONFIG.cache.enable) return callback([], "error");
 
         if (redis.status != "ready") {
@@ -99,4 +101,6 @@ module.exports = function(server, restify) {
             callback(result);
         });
     }
+
+    return this;
 }

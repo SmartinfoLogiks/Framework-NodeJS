@@ -4,8 +4,9 @@
  * @author : Bismay <bismay@smartinfologiks.com>
  * */
 
-const config = require('./api/config');
-const env = {};
+require('dotenv').config();
+
+const config = require('./app/config');
 
 /**
  * Loading all plugin packages required
@@ -15,36 +16,25 @@ const restifyPlugins = require('restify-plugins');
 const errors = require('restify-errors');
 const bunyan = require('bunyan');
 
-const mongoose = require('mongoose');
-const mongooseStringQuery = require('mongoose-string-query');
-const timestamps = require('mongoose-timestamp');
-const autoIncrement = require('mongoose-plugin-autoinc');
+const nanoID = require("nanoid").nanoid;
 
-const mysql = require('mysql');
-
-const nanoID = require("nanoid");
-
+global.moment = require('moment');
+global._ = require('lodash');
+global.axios = require('axios');//.default;
 global.glob = require('glob');
 global.fs = require('fs');
 global.path = require('path');
 global.md5 = require('md5');
 
 
-global.moment = require('moment');
-global._ = require('lodash');
-global.axios = require('axios');
-global.nanoid = nanoID;
-global.errors = errors;
-
 config.START_TIME = moment().format();
-config.ROOT_PATH  = __dirname;//path.dirname();
+config.ROOT_PATH  = __dirname;
 
+console.log("\x1b[34m%s\x1b[0m","\nAPI Engine Initialization Started\n");
 
 global.CONFIG = config;
 global._ENV = {};
-global.CLSINDEX = {"CONTROLLERS":[]};
-
-console.log("\x1b[31m%s\x1b[0m","\nAPI Engine Initialization Started");
+global.errors = errors;
 
 global._LOGGER = require('./api/logger');
 _LOGGER.initLoggers();
@@ -61,7 +51,6 @@ const server = restify.createServer({
     ignoreTrailingSlash: true
 });
 server.config = config;
-server.env = env;
 
 require('./api/misc')(server, restify);
 require('./api/plugins')(server, restify);
@@ -70,36 +59,22 @@ require('./api/middleware')(server, restify);
 require('./api/security')(server, restify);
 require('./api/routes')(server, restify); // Load Basic System Routes
 
-fs.readdirSync('./api/controllers/').forEach(function(file) {
-    if ((file.indexOf(".js") > 0 && (file.indexOf(".js") + 3 == file.length))) {
-        filePath = path.resolve('./api/controllers/' + file);
-
-        clsName = file.replace('.js','').toUpperCase();
-        global[clsName] = require(filePath);//(server, restify);
-        CLSINDEX.CONTROLLERS.push(clsName);
-    }
-});
-
 fs.readdirSync('./api/helpers/').forEach(function(file) {
     if ((file.indexOf(".js") > 0 && (file.indexOf(".js") + 3 == file.length))) {
-        filePath = path.resolve('./api/helpers/' + file);
-        require(filePath)(server, restify);
+        var className = file.toLowerCase().replace(".js", "").toUpperCase();
+        var filePath = path.resolve('./api/helpers/' + file);
+        global[className] = require(filePath)(server, restify);
+
+        console.log(">>>Loading", className, typeof global[className]);
+        if(global[className].initialize!=null) {
+            global[className].initialize();
+        }
+        
     }
     //   console.log("Loading helpers : " + filePath);
 });
 
-fs.readdirSync('./api/routes/').forEach(function(file) {
-    if ((file.indexOf(".js") > 0 && (file.indexOf(".js") + 3 == file.length))) {
-        filePath = path.resolve('./api/routes/' + file);
-        require(filePath)(server, restify);
-    }
-    //   console.log("Loading routes : " + filePath);
-});
-
-if(CONFIG.cache.enable) {
-    _CACHE.initCache();
-}
-
+//Process Cleanup
 function exitHandler(options, exitCode) {
     //console.log("SERVER EXIT", exitCode, '-',options);
     if(options=="exit") return;
@@ -122,7 +97,6 @@ function exitHandler(options, exitCode) {
 }
 
 
-//Process Cleanup
 [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach((eventType) => {
     process.on(eventType, exitHandler.bind(null, eventType));
 })
@@ -184,60 +158,18 @@ if(CONFIG.intercept_axios_response) {
         });
 }
 
-
 /**
  * Start Server, Checks for availale PORTs
  * Then Connect to Mongo, MySQL, Redis, RabbitMQ
  */
 server.listen(config.port, () => {
+    console.log("");
+    APP.initializeApplication();
 
-    //Setup MySQL
-    if(config.dbmysql.enable) {
-        server.mysql = mysql.createConnection(config.dbmysql);
-        server.mysql.connect();
-        console.log("MYSQL Initialized");
+    console.log("\n\x1b[34m%s\x1b[0m","API Engine Initialization Completed");
+    console.log(`Server Started @ `+moment().format()+` and can be accessed on ${config.host}:${config.port}/`);
+
+    if(CONFIG.remoteDebug===true) {
+        startRemoteDebugger();
     }
-
-    server.initValidator();
-
-    //Setup Mongoose->MongoDB
-    if(config.dbmongo.enable) {
-        mongoose.Promise = global.Promise;
-        mongoose.connect(config.dbmongo.uri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            useFindAndModify: false,
-            useCreateIndex: true,
-            autoIndex: false
-        });
-
-        server.mongodb = mongoose.connection;
-
-        server.mongodb.on('error', (err) => {
-            console.error(err);
-            process.exit(1);
-        });
-
-        server.mongodb.once('open', () => {
-
-            server.loadMongoModels();
-            console.log("MONGODB Initialized");
-
-            console.log("\x1b[31m%s\x1b[0m","API Engine Initialization Completed");
-            console.log(`\nServer Started @ `+moment().format()+` and can be accessed on ${config.host}:${config.port}/`);
-
-            if(CONFIG.remoteDebug===true) {
-                startRemoteDebugger();
-            }
-        });
-    } else {
-        console.log("\x1b[31m%s\x1b[0m","API Engine Initialization Completed");
-        console.log(`\nServer Started @ `+moment().format()+` and can be accessed on ${config.host}:${config.port}/`);
-
-        if(CONFIG.remoteDebug===true) {
-            startRemoteDebugger();
-        }
-    }
-    
-    //console.log(`${server.config.name} is listening on port http://${config.host}:${config.port}/`);
 });

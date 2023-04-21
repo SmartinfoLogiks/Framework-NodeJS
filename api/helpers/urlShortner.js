@@ -2,7 +2,11 @@
 
 module.exports = function(server, restify) {
 
-    global.urlShorten = function(srcURL, category, callback) {
+	initialize = function() {
+        
+    }
+
+    server.urlShorten = function(srcURL, category, callback) {
     	var cuttlyAPI = "https://cutt.ly/api/api.php?key=b851f5efa08c313cd6575d00f405f0a59c0d7&short="+encodeURI(srcURL);
 
 	 	axios({
@@ -17,4 +21,6 @@ module.exports = function(server, restify) {
 			  	return callback(false, "Error generating ShortURL (2)");
 			  });
     }
+
+    return this;
 }

@@ -4,7 +4,7 @@ var Validator = require('validatorjs');
 
 module.exports = function(server, restify) {
 
-	server.initValidator = function() {
+	initialize = function() {
 		// Validator.register('telephone', function(value, requirement, attribute) { // requirement parameter defaults to null
 		// 	  return value.match(/^\d{3}-\d{3}-\d{4}$/);
 		// 	}, 'The :attribute phone number is not in the format XXX-XXX-XXXX.');
@@ -30,19 +30,19 @@ module.exports = function(server, restify) {
 		//           max: parameters[1],
 		//         };
 		//     });
-	},
+	}
 
-	global.validateRule = function(formData, ruleObj) {
+	validateRule = function(formData, ruleObj) {
 		let validation = new Validator(formData, ruleObj);
 
 		return {
 			"status": validation.passes(),
 			"errors": validation.errors.all()
 		};
-	},
+	}
 
 
-	global.validate = function(formData, ruleKey) {
+	validate = function(formData, ruleKey) {
 		let data = {
 		  name: 'John',
 		  email: 'johndoe@gmail.com',
@@ -60,4 +60,6 @@ module.exports = function(server, restify) {
 		validation.passes(); // true
 		validation.fails(); // false
 	}
+
+	return this;
 }

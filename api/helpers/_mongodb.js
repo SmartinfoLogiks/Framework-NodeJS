@@ -1,15 +1,46 @@
 //MongoDB Database Helper Functions
 
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
+const mongooseStringQuery = require('mongoose-string-query');
+const timestamps = require('mongoose-timestamp');
+const autoIncrement = require('mongoose-plugin-autoinc');
+
+
 var Schema = mongoose.Schema;
 
 module.exports = function(server, restify) {
 
-	server.loadMongoModels = function() {
+	initialize = function() {
+		if(CONFIG.dbmongo.enable) {
+	        mongoose.Promise = global.Promise;
+	        mongoose.connect(CONFIG.dbmongo.uri, {
+	            useNewUrlParser: true,
+	            useUnifiedTopology: true,
+	            useFindAndModify: false,
+	            useCreateIndex: true,
+	            autoIndex: false
+	        });
+
+	        server.mongodb = mongoose.connection;
+
+	        server.mongodb.on('error', (err) => {
+	        	console.log("MONGODB Initialization Failed", err);
+	            process.exit(1);
+	        });
+
+	        server.mongodb.once('open', () => {
+
+	            _MONGODB.loadMongoModels();
+	            console.log("MONGODB Initialized");
+	        });
+	    }
+	}
+
+	loadMongoModels = function() {
 		console.log("LOADING MONGODB MODELS");
-		fs.readdirSync('./api/models/mongoose/').forEach(function(file) {
+		fs.readdirSync('./app/models/mongoose/').forEach(function(file) {
 		    if ((file.indexOf(".js") > 0 && (file.indexOf(".js") + 3 == file.length))) {
-		        var filePath = path.resolve('./api/models/mongoose/' + file);
+		        var filePath = path.resolve('./app/models/mongoose/' + file);
 
 		        var clsName = file.replace('.js','')
 		        try {
@@ -20,9 +51,9 @@ module.exports = function(server, restify) {
 		        }
 		    }
 		});
-	},
+	}
 
-	global.fetchMongoData = function(myModel, queryParams, callback) {
+	fetchMongoData = function(myModel, queryParams, callback) {
 		var params = processQueryParams(queryParams);
 		// console.log("FETCHMONGODATA", params);
 		
@@ -61,9 +92,9 @@ module.exports = function(server, restify) {
 	            callback(data);
 	        });
       	}
-	},
+	}
 
-	global.countdataMongoModel = function(myModel, queryParams, callback) {
+	countdataMongoModel = function(myModel, queryParams, callback) {
 		var params = processQueryParams(queryParams);
 		// console.log("QUERYMONGOMODEL", params, params.findQuery);
       	//myModel = WalletLog;
@@ -96,9 +127,9 @@ module.exports = function(server, restify) {
 		              });
 	            });
 	        });
-	},
+	}
 
-	global.queryMongoModel = function(myModel, queryParams, callback) {
+	queryMongoModel = function(myModel, queryParams, callback) {
 		var params = processQueryParams(queryParams);
 		// console.log("QUERYMONGOMODEL", params, params.findQuery);
       	//myModel = WalletLog;
@@ -131,9 +162,9 @@ module.exports = function(server, restify) {
 		              });
 	            });
 	        });
-	},
+	}
 
-	global.processQueryParams = function(params) {
+	processQueryParams = function(params) {
 		if(params==null) params = {"page":0,"limit":20};
 
 		//if(params.page==null || params.page<0) params.page=0;
@@ -216,10 +247,12 @@ module.exports = function(server, restify) {
 		// console.log(params.findQuery);
 
 		return params;
-	},
+	}
 
-	global.clearText = function(sText) {
+	clearText = function(sText) {
 		if(sText==null || sText.length<=0) return "";
 		return sText.replace(/[^a-zA-Z0-9 -_]/g, '');
 	}
+
+	return this;
 }

@@ -1,10 +1,11 @@
 {
-    "name": "com.smartinfologiks.api",
-    "title": "SmartinfoLogiks API Server",
+    "name": "com.smartinfologiks.api2",
+    "title": "SmartinfoLogiks API Framework",
     "version": "1.0.0",
-    "description": "API for internal purposes. This may be used for mapping, logging, tracking, artifact, data src, etc",
+    "description": "A mordern NodeJS framework for simplifying and accelerating NodeJS development and adding low code features.",
     "main": "index.js",
     "scripts": {
+        "compile": "clear;npx tsc;",
         "start": "clear;node index.js",
         "deploy": "npm install && pm2 reload ecosystem.config.js",
         "deploy_production": "npm install && pm2 reload ecosystem.config.js --env production",
@@ -12,7 +13,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/bismay4u/Boilerplate-nodejs-api.git"
+        "url": "git+https://github.com/SmartinfoLogiks/Framework-NodeJS.git"
     },
     "keywords": [
         "API",
@@ -20,13 +21,12 @@
     ],
     "author": "Bismay <bismay@smartinfologiks.com>",
     "license": "MIT",
-    "homepage": "https://github.com/bismay4u/Boilerplate-nodejs-api#readme",
+    "homepage": "https://github.com/SmartinfoLogiks/Framework-NodeJS#readme",
     "dependencies": {
         "axios": "^0.21.2",
         "bunyan-rotating-file-stream": "^1.6.3",
         "crypto": "^1.0.1",
-        "csv-parse": ">=4.4.6",
-        "find-my-way": "^2.2.5",
+        "dotenv": "^16.0.3",
         "ioredis": "^4.0.0",
         "js-base64": "^3.6.0",
         "js-sha512": "^0.8.0",
@@ -51,5 +51,8 @@
         "shortid": "^2.2.16",
         "uuid": "^8.3.1",
         "validatorjs": "^3.20.0"
+    },
+    "devDependencies": {
+        "typescript": "^5.0.4"
     }
 }

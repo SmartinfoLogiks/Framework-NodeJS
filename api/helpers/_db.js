@@ -1,11 +1,32 @@
 //MySQL Database Helper Functions
 
-global._MYSQL = {};
+const mysql = require('mysql');
+
+var _MYSQL = {};
 
 module.exports = function(server, restify) {
 
+	initialize = function(callback) {
+		if(CONFIG.dbmysql.enable) {
+
+			if(Array.isArray(CONFIG.dbmysql)) {
+				_.each(CONFIG.dbmysql, function(conf, k) {
+					if(conf.keyid==null) conf.keyid = "MYSQL"+k;
+					
+					_MYSQL[conf.keyid] = mysql.createConnection(CONFIG.dbmysql);
+		        	_MYSQL[conf.keyid].connect();
+		        	console.log("MYSQL Initialized - "+conf.keyid);
+				})
+			} else {
+				_MYSQL["MYSQL0"] = mysql.createConnection(CONFIG.dbmysql);
+		        _MYSQL["MYSQL0"].connect();
+		        console.log("MYSQL Initialized - MYSQL0");
+			}
+	    }
+	}
+
 	//Standard MySQL
-	global.db_query = function(sql, params, callback) {
+	db_query = function(sql, params, callback) {
 		if(CONFIG.log_sql) {
 			console.log("SQL", sql, params);
 		}
@@ -21,9 +42,9 @@ module.exports = function(server, restify) {
 			      	results = JSON.parse(JSON.stringify(results));
 			      	callback(results);
 			    });
-	},
+	}
 
-	global.db_selectQ = function(table, columns, where, whereParams, callback, additionalQueryParams) {
+	db_selectQ = function(table, columns, where, whereParams, callback, additionalQueryParams) {
 		if(Array.isArray(columns)) columnsStr = columns.join(",");
 		else columnsStr = columns;
 
@@ -68,9 +89,9 @@ module.exports = function(server, restify) {
 			      	results = JSON.parse(JSON.stringify(results));
 			      	callback(results);
 			    });
-	},
+	}
 
-	global.db_insertQ1 = function(table, data, callback) {
+	db_insertQ1 = function(table, data, callback) {
 
 		cols = [];quest = [];
 		vals = [];
@@ -94,9 +115,9 @@ module.exports = function(server, restify) {
 
 	          callback(results.insertId);
 	        });
-	},
+	}
 
-	global.db_insert_batchQ = function(table, data, callback) {
+	db_insert_batchQ = function(table, data, callback) {
 		if(data[0]==null) {
 			return callback(false, "Data Not Defined");
 		}
@@ -118,9 +139,9 @@ module.exports = function(server, restify) {
 	          }
 	          callback(true);
 	        });
-	},
+	}
 
-	global.db_deleteQ = function(table, where, callback) {
+	db_deleteQ = function(table, where, callback) {
 		sqlWhere = [];
 		if(typeof where == "object" && !Array.isArray(where)) {
 			_.each(where, function(a, b) {
@@ -148,9 +169,9 @@ module.exports = function(server, restify) {
 	          }
 	          callback(true);
 	        });
-	},
+	}
 
-	global.db_updateQ = function(table, data, where, callback) {
+	db_updateQ = function(table, data, where, callback) {
 		var fData = [];
 		var vals = [];
 		_.each(data, function(a,b) {
@@ -188,4 +209,6 @@ module.exports = function(server, restify) {
 	          callback(true);
 	        });
 	}
+
+	return this;
 }
